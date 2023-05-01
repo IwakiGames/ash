@@ -59,3 +59,13 @@ impl From<vk::Extent2D> for vk::Rect2D {
 pub unsafe trait TaggedStructure {
     const STRUCTURE_TYPE: vk::StructureType;
 }
+
+#[cfg(feature = "debug")]
+pub(crate) fn wrap_cstr_slice_until_nul(
+    bytes: &[core::ffi::c_char],
+) -> Result<&core::ffi::CStr, core::ffi::FromBytesUntilNulError> {
+    core::ffi::CStr::from_bytes_until_nul(
+        // SAFETY: The cast from c_char to u8 is ok because a c_char is always one byte.
+        unsafe { core::slice::from_raw_parts(bytes.as_ptr().cast(), bytes.len()) },
+    )
+}

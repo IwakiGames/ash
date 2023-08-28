@@ -5,6 +5,8 @@ use std::ffi::CStr;
 use std::mem;
 use std::ptr;
 
+pub const NAME: &CStr = vk::khr_external_fence_win32::NAME;
+
 /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_KHR_external_fence_win32.html>
 #[derive(Clone)]
 pub struct ExternalFenceWin32 {
@@ -40,8 +42,6 @@ impl ExternalFenceWin32 {
         (self.fp.get_fence_win32_handle_khr)(self.handle, get_info, &mut handle)
             .result_with_success(handle)
     }
-
-    pub const NAME: &'static CStr = vk::khr_external_fence_win32::DeviceFn::NAME;
 
     #[inline]
     pub fn fp(&self) -> &vk::khr_external_fence_win32::DeviceFn {

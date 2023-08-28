@@ -5,6 +5,8 @@ use std::ffi::CStr;
 use std::mem;
 use std::ptr;
 
+pub const NAME: &CStr = vk::khr_external_memory_win32::NAME;
+
 /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_KHR_external_memory_win32.html>
 #[derive(Clone)]
 pub struct ExternalMemoryWin32 {
@@ -48,8 +50,6 @@ impl ExternalMemoryWin32 {
         )
         .result()
     }
-
-    pub const NAME: &'static CStr = vk::khr_external_memory_win32::DeviceFn::NAME;
 
     #[inline]
     pub fn fp(&self) -> &vk::khr_external_memory_win32::DeviceFn {

@@ -3,6 +3,8 @@ use crate::{Device, Instance};
 use std::ffi::CStr;
 use std::mem;
 
+pub const NAME: &CStr = vk::khr_maintenance4::NAME;
+
 /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_KHR_maintenance4.html>
 #[derive(Clone)]
 pub struct Maintenance4 {
@@ -74,8 +76,6 @@ impl Maintenance4 {
         );
         assert_eq!(count as usize, out.len());
     }
-
-    pub const NAME: &'static CStr = vk::khr_maintenance4::DeviceFn::NAME;
 
     #[inline]
     pub fn fp(&self) -> &vk::khr_maintenance4::DeviceFn {

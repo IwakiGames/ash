@@ -4,6 +4,8 @@ use crate::{Device, Instance};
 use std::ffi::CStr;
 use std::mem;
 
+pub const NAME: &CStr = vk::khr_timeline_semaphore::NAME;
+
 #[derive(Clone)]
 pub struct TimelineSemaphore {
     handle: vk::Device,
@@ -42,8 +44,6 @@ impl TimelineSemaphore {
     pub unsafe fn signal_semaphore(&self, signal_info: &vk::SemaphoreSignalInfo) -> VkResult<()> {
         (self.fp.signal_semaphore_khr)(self.handle, signal_info).result()
     }
-
-    pub const NAME: &'static CStr = vk::khr_timeline_semaphore::DeviceFn::NAME;
 
     #[inline]
     pub fn fp(&self) -> &vk::khr_timeline_semaphore::DeviceFn {

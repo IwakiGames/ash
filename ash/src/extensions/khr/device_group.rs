@@ -1,8 +1,7 @@
 #[cfg(doc)]
-use super::{SwapchainDevice, SwapchainInstance};
+use super::swapchain::{Device, Instance};
 use crate::prelude::*;
 use crate::vk;
-use crate::{Device, Entry, Instance};
 use std::ffi::CStr;
 use std::mem;
 
@@ -17,7 +16,7 @@ pub struct DeviceGroupDevice {
 }
 
 impl DeviceGroupDevice {
-    pub fn new(instance: &Instance, device: &Device) -> Self {
+    pub fn new(instance: &crate::Instance, device: &crate::Device) -> Self {
         let handle = device.handle();
         let fp = vk::khr_device_group::DeviceFn::load(|name| unsafe {
             mem::transmute(instance.get_device_proc_addr(handle, name.as_ptr()))
@@ -71,7 +70,7 @@ impl DeviceGroupDevice {
 
     /// Requires [`VK_KHR_surface`] to be enabled.
     ///
-    /// Also available as [`SwapchainDevice::get_device_group_present_capabilities()`] since [Vulkan 1.1].
+    /// Also available as [`swapchain::Device::get_device_group_present_capabilities()`] since [Vulkan 1.1].
     ///
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetDeviceGroupPresentCapabilitiesKHR.html>
     ///
@@ -91,7 +90,7 @@ impl DeviceGroupDevice {
 
     /// Requires [`VK_KHR_surface`] to be enabled.
     ///
-    /// Also available as [`SwapchainDevice::get_device_group_surface_present_modes()`] since [Vulkan 1.1].
+    /// Also available as [`swapchain::Device::get_device_group_surface_present_modes()`] since [Vulkan 1.1].
     ///
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetDeviceGroupSurfacePresentModesKHR.html>
     ///
@@ -111,7 +110,7 @@ impl DeviceGroupDevice {
     ///
     /// Requires [`VK_KHR_swapchain`] to be enabled.
     ///
-    /// Also available as [`SwapchainDevice::acquire_next_image2()`] since [Vulkan 1.1].
+    /// Also available as [`swapchain::Device::acquire_next_image2()`] since [Vulkan 1.1].
     ///
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkAcquireNextImage2KHR.html>
     ///
@@ -150,7 +149,7 @@ pub struct DeviceGroupInstance {
 }
 
 impl DeviceGroupInstance {
-    pub fn new(entry: &Entry, instance: &Instance) -> Self {
+    pub fn new(entry: &crate::Entry, instance: &crate::Instance) -> Self {
         let handle = instance.handle();
         let fp = vk::khr_device_group::InstanceFn::load(|name| unsafe {
             mem::transmute(entry.get_instance_proc_addr(handle, name.as_ptr()))
@@ -160,7 +159,7 @@ impl DeviceGroupInstance {
 
     /// Requires [`VK_KHR_surface`] to be enabled.
     ///
-    /// Also available as [`SwapchainInstance::get_physical_device_present_rectangles()`] since [Vulkan 1.1].
+    /// Also available as [`swapchain::Instance::get_physical_device_present_rectangles()`] since [Vulkan 1.1].
     ///
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDevicePresentRectanglesKHR.html>
     ///

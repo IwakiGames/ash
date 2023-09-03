@@ -2,8 +2,8 @@ extern crate ash;
 extern crate winit;
 
 use ash::extensions::{
-    ext::DebugUtilsInstance,
-    khr::{Surface, SwapchainDevice},
+    ext::debug_utils,
+    khr::{surface, swapchain},
 };
 use ash::{vk, Entry};
 pub use ash::{Device, Instance};
@@ -140,9 +140,9 @@ pub struct ExampleBase {
     pub entry: Entry,
     pub instance: Instance,
     pub device: Device,
-    pub surface_loader: Surface,
-    pub swapchain_loader: SwapchainDevice,
-    pub debug_utils_loader: DebugUtilsInstance,
+    pub surface_loader: surface::Surface,
+    pub swapchain_loader: swapchain::SwapchainDevice,
+    pub debug_utils_loader: debug_utils::DebugUtilsInstance,
     pub window: winit::window::Window,
     pub event_loop: RefCell<EventLoop<()>>,
     pub debug_call_back: vk::DebugUtilsMessengerEXT,
@@ -228,7 +228,7 @@ impl ExampleBase {
                 ash_window::enumerate_required_extensions(window.raw_display_handle())
                     .unwrap()
                     .to_vec();
-            extension_names.push(DebugUtilsInstance::NAME.as_ptr());
+            extension_names.push(debug_utils::NAME.as_ptr());
 
             #[cfg(any(target_os = "macos", target_os = "ios"))]
             {
@@ -273,7 +273,7 @@ impl ExampleBase {
                 )
                 .pfn_user_callback(Some(vulkan_debug_callback));
 
-            let debug_utils_loader = DebugUtilsInstance::new(&entry, &instance);
+            let debug_utils_loader = debug_utils::DebugUtilsInstance::new(&entry, &instance);
             let debug_call_back = debug_utils_loader
                 .create_debug_utils_messenger(&debug_info, None)
                 .unwrap();
@@ -288,7 +288,7 @@ impl ExampleBase {
             let pdevices = instance
                 .enumerate_physical_devices()
                 .expect("Physical device error");
-            let surface_loader = Surface::new(&entry, &instance);
+            let surface_loader = surface::Surface::new(&entry, &instance);
             let (pdevice, queue_family_index) = pdevices
                 .iter()
                 .find_map(|pdevice| {
@@ -316,7 +316,7 @@ impl ExampleBase {
                 .expect("Couldn't find suitable device.");
             let queue_family_index = queue_family_index as u32;
             let device_extension_names_raw = [
-                SwapchainDevice::NAME.as_ptr(),
+                swapchain::NAME.as_ptr(),
                 #[cfg(any(target_os = "macos", target_os = "ios"))]
                 KhrPortabilitySubsetFn::NAME.as_ptr(),
             ];
@@ -377,7 +377,7 @@ impl ExampleBase {
                 .cloned()
                 .find(|&mode| mode == vk::PresentModeKHR::MAILBOX)
                 .unwrap_or(vk::PresentModeKHR::FIFO);
-            let swapchain_loader = SwapchainDevice::new(&instance, &device);
+            let swapchain_loader = swapchain::SwapchainDevice::new(&instance, &device);
 
             let swapchain_create_info = vk::SwapchainCreateInfoKHR::default()
                 .surface(surface)

@@ -56,9 +56,14 @@ impl LowLatency2 {
     /// Retrieve the number of elements to pass to [`get_latency_timings()`][Self::get_latency_timings()]
     #[inline]
     pub unsafe fn get_latency_timings_len(&self, swapchain: vk::SwapchainKHR) -> usize {
-        let mut count = 0;
-        (self.fp.get_latency_timings_nv)(self.handle, swapchain, &mut count, ptr::null_mut());
-        count as usize
+        let mut count = mem::MaybeUninit::uninit();
+        (self.fp.get_latency_timings_nv)(
+            self.handle,
+            swapchain,
+            count.as_mut_ptr(),
+            ptr::null_mut(),
+        );
+        count.assume_init() as usize
     }
 
     /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkGetLatencyTimingsNV.html>

@@ -2,6 +2,7 @@ use ash::util::*;
 use ash::vk;
 use examples::*;
 use std::default::Default;
+use std::error::Error;
 use std::ffi::CStr;
 use std::io::Cursor;
 use std::mem;
@@ -13,9 +14,9 @@ struct Vertex {
     color: [f32; 4],
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     unsafe {
-        let base = ExampleBase::new(1920, 1080);
+        let base = ExampleBase::new(1920, 1080)?;
         let renderpass_attachments = [
             vk::AttachmentDescription {
                 format: base.surface_format.format,
@@ -346,7 +347,7 @@ fn main() {
 
         let graphic_pipeline = graphics_pipelines[0];
 
-        base.render_loop(|| {
+        let _ = base.render_loop(|| {
             let (present_index, _) = base
                 .swapchain_loader
                 .acquire_next_image(
@@ -454,4 +455,6 @@ fn main() {
         }
         base.device.destroy_render_pass(renderpass, None);
     }
+
+    Ok(())
 }

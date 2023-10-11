@@ -7,29 +7,24 @@
     unused_qualifications
 )]
 
-use ash::extensions::{
-    ext::DebugUtils,
-    khr::{Surface, Swapchain},
-};
-use ash::{vk, Entry};
-pub use ash::{Device, Instance};
-use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
-use std::borrow::Cow;
-use std::cell::RefCell;
-use std::default::Default;
-use std::ffi::CStr;
-use std::ops::Drop;
-use std::os::raw::c_char;
-
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-use ash::vk::{
-    KhrGetPhysicalDeviceProperties2Fn, KhrPortabilityEnumerationFn, KhrPortabilitySubsetFn,
+use std::{
+    borrow::Cow, cell::RefCell, default::Default, error::Error, ffi::CStr, ops::Drop,
+    os::raw::c_char,
 };
 
+use ash::{
+    extensions::{
+        ext::DebugUtils,
+        khr::{Surface, Swapchain},
+    },
+    vk, Device, Entry, Instance,
+};
 use winit::{
-    event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
+    event::{ElementState, Event, KeyEvent, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
-    platform::run_return::EventLoopExtRunReturn,
+    keyboard::{Key, NamedKey},
+    platform::run_on_demand::EventLoopExtRunOnDemand,
+    raw_window_handle::{HasDisplayHandle, HasWindowHandle},
     window::WindowBuilder,
 };
 
@@ -182,35 +177,36 @@ pub struct ExampleBase {
 }
 
 impl ExampleBase {
-    pub fn render_loop<F: Fn()>(&self, f: F) {
-        self.event_loop
-            .borrow_mut()
-            .run_return(|event, _, control_flow| {
-                *control_flow = ControlFlow::Poll;
-                match event {
-                    Event::WindowEvent {
-                        event:
-                            WindowEvent::CloseRequested
-                            | WindowEvent::KeyboardInput {
-                                input:
-                                    KeyboardInput {
-                                        state: ElementState::Pressed,
-                                        virtual_keycode: Some(VirtualKeyCode::Escape),
-                                        ..
-                                    },
-                                ..
-                            },
-                        ..
-                    } => *control_flow = ControlFlow::Exit,
-                    Event::MainEventsCleared => f(),
-                    _ => (),
+    pub fn render_loop<F: Fn()>(&self, f: F) -> Result<(), impl Error> {
+        self.event_loop.borrow_mut().run_on_demand(|event, elwp| {
+            elwp.set_control_flow(ControlFlow::Poll);
+            match event {
+                Event::WindowEvent {
+                    event:
+                        WindowEvent::CloseRequested
+                        | WindowEvent::KeyboardInput {
+                            event:
+                                KeyEvent {
+                                    state: ElementState::Pressed,
+                                    logical_key: Key::Named(NamedKey::Escape),
+                                    ..
+                                },
+                            ..
+                        },
+                    ..
+                } => {
+                    elwp.exit();
                 }
-            });
+                Event::AboutToWait => f(),
+                // Event::MainEventsCleared => f(),
+                _ => (),
+            }
+        })
     }
 
-    pub fn new(window_width: u32, window_height: u32) -> Self {
+    pub fn new(window_width: u32, window_height: u32) -> Result<Self, Box<dyn Error>> {
         unsafe {
-            let event_loop = EventLoop::new();
+            let event_loop = EventLoop::new()?;
             let window = WindowBuilder::new()
                 .with_title("Ash - Example")
                 .with_inner_size(winit::dpi::LogicalSize::new(
@@ -231,16 +227,16 @@ impl ExampleBase {
                 .collect();
 
             let mut extension_names =
-                ash_window::enumerate_required_extensions(window.raw_display_handle())
+                ash_window::enumerate_required_extensions(window.display_handle()?)
                     .unwrap()
                     .to_vec();
             extension_names.push(DebugUtils::NAME.as_ptr());
 
             #[cfg(any(target_os = "macos", target_os = "ios"))]
             {
-                extension_names.push(KhrPortabilityEnumerationFn::NAME.as_ptr());
+                extension_names.push(vk::KhrPortabilityEnumerationFn::NAME.as_ptr());
                 // Enabling this extension is a requirement when using `VK_KHR_portability_subset`
-                extension_names.push(KhrGetPhysicalDeviceProperties2Fn::NAME.as_ptr());
+                extension_names.push(vk::KhrGetPhysicalDeviceProperties2Fn::NAME.as_ptr());
             }
 
             let appinfo = vk::ApplicationInfo::default()
@@ -286,8 +282,8 @@ impl ExampleBase {
             let surface = ash_window::create_surface(
                 &entry,
                 &instance,
-                window.raw_display_handle(),
-                window.raw_window_handle(),
+                window.display_handle()?,
+                window.window_handle()?,
                 None,
             )
             .unwrap();
@@ -324,7 +320,7 @@ impl ExampleBase {
             let device_extension_names_raw = [
                 Swapchain::NAME.as_ptr(),
                 #[cfg(any(target_os = "macos", target_os = "ios"))]
-                KhrPortabilitySubsetFn::NAME.as_ptr(),
+                vk::KhrPortabilitySubsetFn::NAME.as_ptr(),
             ];
             let features = vk::PhysicalDeviceFeatures {
                 shader_clip_distance: 1,
@@ -547,7 +543,7 @@ impl ExampleBase {
                 .create_semaphore(&semaphore_create_info, None)
                 .unwrap();
 
-            Self {
+            Ok(Self {
                 event_loop: RefCell::new(event_loop),
                 entry,
                 instance,
@@ -577,7 +573,7 @@ impl ExampleBase {
                 debug_call_back,
                 debug_utils_loader,
                 depth_image_memory,
-            }
+            })
         }
     }
 }

@@ -1,4 +1,5 @@
 use std::default::Default;
+use std::error::Error;
 use std::ffi::CStr;
 use std::io::Cursor;
 use std::mem::{self, align_of};
@@ -23,9 +24,9 @@ pub struct Vector3 {
     pub _pad: f32,
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     unsafe {
-        let base = ExampleBase::new(1920, 1080);
+        let base = ExampleBase::new(1920, 1080)?;
 
         let renderpass_attachments = [
             vk::AttachmentDescription {
@@ -685,7 +686,7 @@ fn main() {
 
         let graphic_pipeline = graphics_pipelines[0];
 
-        base.render_loop(|| {
+        let _ = base.render_loop(|| {
             let (present_index, _) = base
                 .swapchain_loader
                 .acquire_next_image(
@@ -813,5 +814,7 @@ fn main() {
             base.device.destroy_framebuffer(framebuffer, None);
         }
         base.device.destroy_render_pass(renderpass, None);
+
+        Ok(())
     }
 }

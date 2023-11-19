@@ -2142,7 +2142,7 @@ impl Device {
         create_infos: &[vk::GraphicsPipelineCreateInfo<'_>],
         allocation_callbacks: Option<&vk::AllocationCallbacks<'_>>,
     ) -> Result<Vec<vk::Pipeline>, (Vec<vk::Pipeline>, vk::Result)> {
-        let mut pipelines = Vec::with_capacity(create_infos.len());
+        let mut pipelines = vec![vk::Pipeline::null(); create_infos.len()];
         let err_code = (self.device_fn_1_0.create_graphics_pipelines)(
             self.handle(),
             pipeline_cache,
@@ -2151,7 +2151,6 @@ impl Device {
             allocation_callbacks.as_raw_ptr(),
             pipelines.as_mut_ptr(),
         );
-        pipelines.set_len(create_infos.len());
         match err_code {
             vk::Result::SUCCESS => Ok(pipelines),
             _ => Err((pipelines, err_code)),
@@ -2166,7 +2165,7 @@ impl Device {
         create_infos: &[vk::ComputePipelineCreateInfo<'_>],
         allocation_callbacks: Option<&vk::AllocationCallbacks<'_>>,
     ) -> Result<Vec<vk::Pipeline>, (Vec<vk::Pipeline>, vk::Result)> {
-        let mut pipelines = Vec::with_capacity(create_infos.len());
+        let mut pipelines = vec![vk::Pipeline::null(); create_infos.len()];
         let err_code = (self.device_fn_1_0.create_compute_pipelines)(
             self.handle(),
             pipeline_cache,
@@ -2175,7 +2174,6 @@ impl Device {
             allocation_callbacks.as_raw_ptr(),
             pipelines.as_mut_ptr(),
         );
-        pipelines.set_len(create_infos.len());
         match err_code {
             vk::Result::SUCCESS => Ok(pipelines),
             _ => Err((pipelines, err_code)),

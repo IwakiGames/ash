@@ -163,19 +163,23 @@ impl RayTracing {
     pub unsafe fn create_ray_tracing_pipelines(
         &self,
         pipeline_cache: vk::PipelineCache,
-        create_info: &[vk::RayTracingPipelineCreateInfoNV<'_>],
+        create_infos: &[vk::RayTracingPipelineCreateInfoNV<'_>],
         allocation_callbacks: Option<&vk::AllocationCallbacks<'_>>,
-    ) -> VkResult<Vec<vk::Pipeline>> {
-        let mut pipelines = vec![mem::zeroed(); create_info.len()];
-        (self.fp.create_ray_tracing_pipelines_nv)(
+    ) -> Result<Vec<vk::Pipeline>, (Vec<vk::Pipeline>, vk::Result)> {
+        let mut pipelines = Vec::with_capacity(create_infos.len());
+        let err_code = (self.fp.create_ray_tracing_pipelines_nv)(
             self.handle,
             pipeline_cache,
-            create_info.len() as u32,
-            create_info.as_ptr(),
+            create_infos.len() as u32,
+            create_infos.as_ptr(),
             allocation_callbacks.as_raw_ptr(),
             pipelines.as_mut_ptr(),
-        )
-        .result_with_success(pipelines)
+        );
+        pipelines.set_len(create_infos.len());
+        match err_code {
+            vk::Result::SUCCESS => Ok(pipelines),
+            _ => Err((pipelines, err_code)),
+        }
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetRayTracingShaderGroupHandlesNV.html>
